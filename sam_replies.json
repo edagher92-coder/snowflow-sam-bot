@@ -1,0 +1,63 @@
+{
+  "persona": "Sam",
+  "page_name": "Snow Flow Sydney",
+  "business_hours": { "tz_offset": 10, "open_hour": 8, "close_hour": 18, "days": [0,1,2,3,4,5] },
+  "greeting_first_message": "Hey, Sam here from Snow Flow 👋 Thanks for the message — I'll be with you shortly. While I'm grabbing your details: are you after a new machine, a hire, or a repair/service? And what suburb's your venue in? That's all I need to point you the right way. – Sam",
+  "away_message": "Hey, it's Sam — you've caught us after hours, but I've got your message and I'll come back first thing. If it's urgent (machine down, event this week), call or text 0450 878 787 and we'll sort it. Quick one so I'm ready: what machine is it, and which suburb? – Sam",
+  "fallback": "Thanks — Sam here. Quick steer so I help fast: are you after a new machine, a hire, or a repair/service, and what suburb's your venue in? You can also call/text 0450 878 787 or email Sydney@snowflow.com.au. – Sam",
+  "postbacks": {
+    "GET_STARTED": "greeting_first_message",
+    "TALK_TO_SAM": "greeting_first_message",
+    "PRICE": "PRICE",
+    "DOWN": "DOWN",
+    "WINTER": "WINTER",
+    "RTO": "RTO"
+  },
+  "rules": [
+    {
+      "id": "PRICE",
+      "keywords": ["price", "pricing", "cost", "how much", "quote"],
+      "reply": "Happy to help — quick steer: slush from $4,100 (SFX3, three flavours at once), soft serve from $21,995 (F2-E), repairs from $405, and the Winter Service Special is $225. Tell me what you're after + your suburb and I'll send exact numbers for your setup. – Sam"
+    },
+    {
+      "id": "WINTER",
+      "keywords": ["winter", "service special", "225", "drop off", "drop-off", "maintenance", "annual service"],
+      "reply": "You're after the Winter Special 👍 $225 — drop your machine to our Sydney workshop and we service it the same day: deep clean, sanitise, full mechanical + refrigeration check, and an inspection-ready maintenance log. First 50 customers only, and you can add a test & tag electrical check for $25. Send me your machine make/model + suburb and I'll lock in a drop-off slot. – Sam"
+    },
+    {
+      "id": "DOWN",
+      "keywords": ["down", "broken", "not working", "repair", "fix", "leaking", "not freezing", "not cold", "error", "fault", "service my", "call out", "call-out"],
+      "reply": "Machine down? Let's move fast — every hour it's dead is sales out the door. We repair all brands across Sydney & Greater Sydney, often same-day. Send your suburb, make/model (a photo of the label is ideal) and what it's doing, and I'll get you the next call-out. Urgent? Call/text 0450 878 787. – Sam"
+    },
+    {
+      "id": "RTO",
+      "keywords": ["rent to own", "rent-to-own", "rto", "silverchef", "finance", "lease", "leasing", "rental", "rent try buy", "payment plan"],
+      "reply": "Good question — yes, we do Rent-To-Own through SilverChef's Rent-Try-Buy: 12-month term, 75% net rental rebate in year 1, 100% tax-deductible, buy/upgrade/return anytime, no lock-in. I can't take finance details in chat, so email Sydney@snowflow.com.au with your business name, ABN, best email + phone and the machine you want — I'll get our account manager to call you. Or ring 0450 878 787. – Sam"
+    },
+    {
+      "id": "DELIVERY",
+      "keywords": ["deliver", "delivery", "install", "installation", "setup", "set up"],
+      "reply": "Yep — we deliver and install across Sydney and NSW, and we don't leave until it's set up and pouring. Tell me your suburb and which machine you're eyeing and I'll confirm timing for your area. – Sam"
+    },
+    {
+      "id": "PARTS",
+      "keywords": ["part", "obsolete", "spare", "3d", "old machine", "discontinued", "can't get"],
+      "reply": "This is where we're a bit different — we 3D scan, render and print parts other techs can't get anymore, so an old machine doesn't have to be a dead one. Send me the brand/model and a photo of the part and I'll tell you if we can remake it. – Sam"
+    },
+    {
+      "id": "LOCATION",
+      "keywords": ["where", "located", "location", "address", "area", "do you cover"],
+      "reply": "We're Sydney-based — sales across all of NSW, service & repairs across Sydney & Greater Sydney. Where's your venue? I'll tell you delivery/service options for your area. – Sam"
+    },
+    {
+      "id": "SOFTSERVE",
+      "keywords": ["soft serve", "softserve", "ice cream", "f2-e", "f2e", "cones"],
+      "reply": "Soft serve done right pushes serious volume — the F2-E ($21,995) is our go-to for busy venues, up to 700 cones/hr. What's your expected daily volume and bench/floor space? I'll tailor a quote. – Sam"
+    },
+    {
+      "id": "SLUSH",
+      "keywords": ["slush", "slushie", "slushy", "sfx3", "frozen drink", "frozen cocktail"],
+      "reply": "The SFX3 (from $4,100) runs three flavours at once, ambient-to-slush in ~40 min. Want me to check stock and price it for your venue? Tell me your suburb and rough cups/day. – Sam"
+    }
+  ]
+}

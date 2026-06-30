@@ -20,10 +20,10 @@ You are now in **deep mode**. Apply these rules for the rest of this session
 ## Subagent routing (quality-first overrides)
 When you need to spawn subagents (Agent tool), use these overrides:
 - **Tier 3 — search, grep**: `model: "sonnet"`, `effort: "high"` (not Haiku — need depth in deep mode)
-- **Tier 2 — code implementation, single-file**: `model: "opus"`, `effort: "high"` (Opus for quality)
-- **Tier 1 — architecture, security, review**: `model: "opus"`, `effort: "xhigh"` (maximum depth)
+- **Tier 2 — code implementation, single-file**: `model: "opus"`, `effort: "high"` (Opus 4.8 for quality)
+- **Tier 1 — architecture, security, review**: `model: "opus"`, `effort: "xhigh"` (Opus 4.8, maximum depth)
 - **Workflows**: `effort: "high"` on all stages, `"xhigh"` on verify stages
-- Main session stays on Opus/high — this mode pushes subagents to Opus too
+- Main session stays on Sonnet 5 / high — this mode pushes subagents to Opus 4.8
 
 ## What to do MORE of
 - Read surrounding code before editing — understand the full context
@@ -31,4 +31,4 @@ When you need to spawn subagents (Agent tool), use these overrides:
 - Consider edge cases and failure modes
 - Parallelize independent searches for thoroughness
 
-Confirm the switch by saying: **Deep mode on. Full reasoning enabled, Opus/Sonnet subagents for thorough work.**
+Confirm the switch by saying: **Deep mode on. Full reasoning enabled, Opus subagents for thorough work.**

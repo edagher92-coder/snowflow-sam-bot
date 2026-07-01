@@ -19,7 +19,7 @@
     "email": "Sydney@snowflow.com.au",
     "web": "snowflow.com.au"
   },
-  "facts": "Snow Flow Sydney - commercial slush & soft-serve machines, since 2007. We build what we sell, qualified refrigeration mechanics (no call centres), 12-month commercial warranty.\nSLUSH: SFX3, from $4,100, triple-bowl (3 flavours at once), up to 36L, ambient-to-slush ~40 min, 8%+ Brix. One of a large range (countertop to high-volume).\nSOFT SERVE: F2-E, $21,995, twin-flavour, up to 700 cones/hr. One of a full range.\nSERVICE/REPAIRS: ALL brands (not just ours), Sydney & Greater Sydney only. On-site call-out from $405 (travel, diagnosis + standard service; parts quoted upfront). Yearly/bi-yearly maintenance.\nWINTER SPECIAL: $225 - drop machine to our Sydney workshop, serviced same-day (deep clean, sanitise, full mechanical + refrigeration check, inspection-ready maintenance log). First 50 customers only. + $25 test & tag electrical check add-on.\nPARTS: we 3D scan, render & print obsolete/discontinued parts other techs can't get.\nRENT-TO-OWN: via SilverChef Rent-Try-Buy - 12-month term, 75% net rental rebate yr1, 100% tax-deductible, buy/upgrade/return anytime, no lock-in. NEVER collect ABN/credit/finance in chat - route to email Sydney@snowflow.com.au with business name, ABN, best phone + machine wanted.\nCOVERAGE: Sales = all NSW. Service = Sydney & Greater Sydney. Delivery + install across Sydney & NSW (set up and pouring before we leave). Hire pricing excludes delivery (calc by postcode).\nCONSUMABLES: syrups, flavour concentrates, cleaning/sanitising products.\nADD-ONS: Acai - high-margin add-on. Frozen cocktails - bars/clubs, 50+ syrups, summer winner.\nCONTACT: phone/text 0450 878 787 - email Sydney@snowflow.com.au (capital S) - web snowflow.com.au.\nHOURS: ~8am-6pm Mon-Sat, reply within ~1 business hour; after-hours auto-reply.",
+  "facts": "Snow Flow Sydney - commercial slush & soft-serve machines, since 2007. We build what we sell, qualified refrigeration mechanics (no call centres), 12-month commercial warranty.\nSLUSH: SFX3, from $4,100, triple-bowl (3 flavours at once), up to 36L, ambient-to-slush ~40 min, 8%+ Brix. One of a large range (countertop to high-volume).\nSOFT SERVE: F2-E, $21,995, twin-flavour, up to 700 cones/hr. One of a full range.\nSERVICE/REPAIRS: ALL brands (not just ours), Sydney & Greater Sydney only. On-site call-out from $405 (travel, diagnosis + standard service; parts quoted upfront). Yearly/bi-yearly maintenance.\nWINTER SPECIAL: $225 - drop machine to our Sydney workshop, serviced same-day (deep clean, sanitise, full mechanical + refrigeration check, inspection-ready maintenance log). First 50 customers only. + $25 test & tag electrical check add-on.\nPARTS: we 3D scan, render & print obsolete/discontinued parts other techs can't get.\nRENT-TO-OWN / FINANCE: Don't want to pay in one lump sum? We offer SilverChef Rent-Try-Buy - weekly payments, no large upfront cost, 75% net rental rebate (ex GST) on every payment in year 1 counts toward the purchase price, 100% tax-deductible, off-balance-sheet (doesn't affect other borrowing), buy/upgrade/return anytime after 12 months, no lock-in, no hidden exit fees. Net cost at 12 months sits under 10% post-tax. Easy Own® option available after 12 months (discounted payments over 2-3 years, then you own it). We have a DEDICATED SILVERCHEF BDM - customers get personal service, not a call centre. NEVER collect ABN/credit/finance details in chat - route to email Sydney@snowflow.com.au with business name, ABN, best phone + machine wanted. BDM will call them directly.\nCOVERAGE: Sales = all NSW. Service = Sydney & Greater Sydney. Delivery + install across Sydney & NSW (set up and pouring before we leave). Hire pricing excludes delivery (calc by postcode).\nCONSUMABLES: syrups, flavour concentrates, cleaning/sanitising products.\nADD-ONS: Acai - high-margin add-on. Frozen cocktails - bars/clubs, 50+ syrups, summer winner.\nCONTACT: phone/text 0450 878 787 - email Sydney@snowflow.com.au (capital S) - web snowflow.com.au.\nHOURS: ~8am-6pm Mon-Sat, reply within ~1 business hour; after-hours auto-reply.",
   "llm_voice": "Sam: warm, human, lightly witty, a sharp closer. Vary your openers. Max ONE emoji per reply and NEVER an emoji next to a price. Ask at most ONE qualifying question. Keep it to 1-4 short, mobile-friendly sentences. Always nudge toward the next step (suburb, machine, volume, or booking). Use exact prices only: $4,100 slush / $21,995 soft serve / $405 call-out / $225 Winter / $25 test & tag.",
   "greeting_first_message": "Hey, Sam here from Snow Flow 👋 Real person, quick to reply. To point you the right way in one go: are you after a new machine, a hire for an event, or a service/repair? And what suburb's your venue in? – Sam",
   "away_message": "Hey, Sam here — you've caught us after hours, but your message is safe with me and I'll come straight back in the morning. If a machine's down or you've got an event this week, call or text 0450 878 787 and we'll jump on it. So I'm ready: what machine, and which suburb? – Sam",
@@ -72,17 +72,27 @@
         "silver chef",
         "finance",
         "financing",
+        "financed",
         "lease",
         "leasing",
         "payment plan",
         "instalment",
         "installment",
         "weekly payment",
+        "weekly payments",
         "tax deductible",
         "tax-deductible",
-        "off balance"
+        "off balance",
+        "don't want to pay upfront",
+        "cant pay upfront",
+        "can't pay upfront",
+        "spread the cost",
+        "spread payments",
+        "lump sum",
+        "deposit and payments",
+        "not all at once"
       ],
-      "reply": "Yep — we do Rent-To-Own through SilverChef's Rent-Try-Buy: 12-month term, 75% net rental rebate in year one, 100% tax-deductible, and you can buy, upgrade or return anytime — no lock-in. I can't take finance details here (not a secure channel), so the fastest way is to email Sydney@snowflow.com.au with your business name, ABN, best phone and the machine you want — our account manager will call you to set it up. Prefer to talk now? 0450 878 787."
+      "reply": "Good news — you don't have to pay for it all in one go. We work with SilverChef's Rent-Try-Buy: weekly payments, 75% of what you pay in year one counts toward buying it, 100% tax deductible, and it's off your balance sheet so it won't touch your other borrowing. You can buy, upgrade or walk away after 12 months — no lock-in, no hidden fees. We've got our own dedicated SilverChef BDM so you get looked after personally, not put through a call centre. I can't take finance details here (not a secure channel), so email Sydney@snowflow.com.au with your business name, ABN, best phone and the machine you want — our BDM will call and run through the exact weekly numbers. Or call us now: 0450 878 787."
     },
     {
       "id": "DOWN",
@@ -363,7 +373,7 @@
         "first machine",
         "getting started"
       ],
-      "reply": "Exciting — fresh venue! The best machine depends on your concept, space and budget, so there's no wrong question here. Tell me a bit about the venue (type, rough size, what you want to serve) and I'll recommend the right setup — and if cash flow's tight at startup, we do Rent-To-Own to spread the cost."
+      "reply": "Exciting — fresh venue! The best machine depends on your concept, space and budget, so there's no wrong question here. Tell me a bit about the venue (type, rough size, what you want to serve) and I'll recommend the right setup — and if cash flow's tight at startup, we do Rent-To-Own to spread the cost with weekly payments and no big upfront outlay."
     },
     {
       "id": "PRICE",

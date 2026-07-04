@@ -8,7 +8,7 @@
 
 | Skill | What it does | Triggers |
 |---|---|---|
-| `/auto-escalate` | Seamless model escalation — keep the main session on Sonnet, route hard sub-problems to an Opus subagent (Fable 5 on double-escalation), mechanical fan-out to Haiku, and drop back automatically when the subagent returns. Apply the rubric silently on every task; also | "escalate this"; "use opus for this"; "this is hard" |
+| `/auto-escalate` | Seamless two-dial escalation — model (haiku→sonnet→opus→fable) AND reasoning effort (low→medium→high→xhigh→max) — matched per sub-problem, quality-first: when torn between rungs on quality-relevant work, round UP. Main session stays on Sonnet; drop-back is automatic. Apply silently on every task; also | "escalate this"; "use opus for this"; "think harder" |
 | `/balanced` | Reset to balanced mode — Sonnet 5 main session, Haiku for search, Opus for escalation | "balanced mode"; "reset mode"; "default mode" |
 | `/deep` | Switch to full-power mode for complex tasks — thorough reasoning, Opus subagents, detailed responses | "deep mode"; "thorough"; "complex task" |
 | `/quick` | Switch to token-saving mode for simple tasks — short responses, minimal reasoning, Haiku subagents | "quick mode"; "save tokens"; "be brief" |

@@ -1,70 +1,89 @@
 ---
 name: auto-escalate
 description: |
-  [EFFICIENCY] Seamless model escalation — keep the main session on Sonnet,
-  route hard sub-problems to an Opus subagent (Fable 5 on double-escalation),
-  mechanical fan-out to Haiku, and drop back automatically when the subagent
-  returns. Apply the rubric silently on every task; also
-  use when the user says "escalate this", "use opus for this", "this is hard",
-  "think harder", or "double escalate".
+  [EFFICIENCY] Seamless two-dial escalation — model (haiku→sonnet→opus→fable)
+  AND reasoning effort (low→medium→high→xhigh→max) — matched per sub-problem,
+  quality-first: when torn between rungs on quality-relevant work, round UP.
+  Main session stays on Sonnet; drop-back is automatic. Apply silently on
+  every task; also use when the user says "escalate this", "use opus for
+  this", "think harder", "ultimate effort", or "double escalate".
 ---
 
-# Auto-escalation — the model ladder
+# Auto-escalation — two dials, quality-first
 
-The main session stays on **Sonnet** (the orchestrator). Difficulty is judged
-per *sub-problem*, not per conversation. Escalation = spawning a subagent via
-the **Agent tool with `model: "opus"` / `"fable"` / `"haiku"`** — the main
-session never changes model, so drop-back is automatic the moment the
-subagent returns. (Only the user can change the main model, via `/model`.)
+The main session stays on **Sonnet** (the orchestrator). Escalation happens
+per *sub-problem* by spawning a subagent via the **Agent tool**, which takes
+BOTH dials: `model: "haiku"|"opus"|"fable"` and
+`effort: "low"|"medium"|"high"|"xhigh"|"max"`. The subagent returns, the
+session continues on Sonnet — drop-back needs no action. (Only the user can
+change the main model, via `/model`.)
 
-## Rubric — when to ESCALATE a sub-problem to an `opus` subagent
+## The bias (read first)
 
-Any ONE of these:
-- **Root-cause debugging** where the cause isn't apparent after the first look.
-- **Architecture / design** decisions spanning several systems or ~5+ files,
-  or changing a public interface.
-- **Safety- or compliance-critical output**: pricing-engine logic, EOFY/tax
+**Quality-first, tightly-scoped.** When torn between two rungs on work whose
+quality matters, take the HIGHER rung. Efficiency comes from scoping the
+escalation to the exact sub-problem with a self-contained prompt — never from
+underpowering the brain. One wrong answer costs more than one Opus call.
+
+## Dial 1 — reasoning effort (low → medium → high → xhigh → max)
+
+| Effort | Use for |
+|---|---|
+| low | mechanical: bulk transforms, file inventories, copies, reformatting |
+| medium | routine judgement: template-driven content, simple edits, summaries |
+| high | the working default (matches `effortLevel: high` in settings) |
+| xhigh | hard sub-problems: tricky debugging, careful analysis, edge-case sweeps |
+| max ("ultimate") | the hardest verification/judgement passes; adversarial review |
+
+**Escalate effort before model when the problem is deep-but-narrow** (one
+gnarly bug, one contract to reason through): `sonnet + xhigh` is often
+cheaper than `opus + high` and just as good on a well-scoped prompt.
+
+## Dial 2 — model (haiku → sonnet → opus → fable)
+
+**Escalate model when the problem needs breadth of capability**, not just
+depth. Go to an `opus` subagent when ANY of:
+- Root-cause debugging where the cause isn't apparent after the first look.
+- Architecture / design spanning several systems or ~5+ files, or a public
+  interface change.
+- Safety- or compliance-critical output: pricing-engine logic, EOFY/tax
   phrasing, legal copy, anything the no-fabrication tests guard.
-- **High-stakes numbers**: board/financial analysis, pricing or budget
-  decisions, cash-flow strategy.
-- **Two failed attempts** at the same problem on the current model.
-- **Security-sensitive review** of code or configuration.
+- High-stakes numbers: board/financial analysis, pricing/budget decisions.
+- **One failed attempt or visible uncertainty** on the current rung.
+- Security-sensitive review.
 
-## When to STAY on Sonnet (no subagent)
+Go straight to **`fable` (with `max` effort)** when the task is clearly
+frontier — novel algorithm, deep multi-constraint planning, or quality so
+critical that a second-best answer is a real cost. Otherwise reach fable by
+laddering: Opus attempt fails verification / self-contradicts / reports low
+confidence. Budget: one fable attempt per sub-problem, then surface to the
+user.
 
-Content generation from existing templates/calendars, routine code edits,
-quotes via the deterministic reply engine, ops/scheduling, doc updates,
-anything a test suite can settle cheaply. **Never escalate what a test can
-answer** — run the test.
+De-escalate to `haiku` (+ `low`/`medium` effort) for search, fan-out, and
+mechanical volume.
 
-## When to DE-ESCALATE to `haiku` subagents
+## When NOT to escalate anything
 
-Search/grep fan-out, file inventories, bulk mechanical transforms,
-long-list summarisation. No reasoning → no expensive model.
+Template-driven content, routine edits, quotes via the deterministic reply
+engine, ops/scheduling, doc updates — and **never escalate what a test can
+settle**: run the test.
 
-## DOUBLE-ESCALATION to `fable` (Fable 5)
+## Mechanics
 
-Only when an Opus attempt **fails verification, is self-contradictory, or
-reports low confidence** — or the task is genuinely frontier (novel
-algorithm, deep multi-constraint planning). **One Fable attempt max**, then
-surface to the user instead of burning further.
+1. Scope to the *sub-problem*; write a self-contained prompt (subagents start
+   with zero context).
+2. `Agent(prompt, model: "...", effort: "...")` → integrate → continue.
+3. Verify cheaply before accepting (tests, invariants); failed verification
+   is the trigger for the next rung.
+4. Transparency: one line in the final reply, e.g.
+   `escalated: opus/xhigh (root-cause debugging)`.
 
-## Mechanics (keep it efficient)
+## Cheat-sheet
 
-1. Scope the escalation to the *sub-problem*, never the whole task. Write a
-   **self-contained prompt** — the subagent starts with zero context.
-2. `Agent(prompt, model: "opus")` → integrate the result → continue on Sonnet.
-3. **Verify cheaply before accepting** (run the tests, check the invariant);
-   a failed verification is what justifies the Fable rung.
-4. Budget: at most one Opus + one Fable attempt per sub-problem.
-5. Be transparent: one line in the final reply — `escalated: opus (root-cause
-   debugging)` — so the user sees when and why the ladder was used.
-
-## Strengths cheat-sheet
-
-| Model | Use for | Avoid for |
+| Rung | Typical pairing | For |
 |---|---|---|
-| Haiku | mechanical fan-out, search, bulk transforms | anything needing judgement |
-| Sonnet | day-to-day work, content, routine code, orchestration | frontier reasoning |
-| Opus | deep debugging, architecture, high-stakes analysis | mechanical volume (cost) |
-| Fable 5 | the hardest problems, after Opus falls short | anything the rungs below handle |
+| low | haiku + low/medium | mechanical fan-out |
+| medium | sonnet + medium | routine judgement |
+| high | sonnet + high | default working tier |
+| extra high | sonnet + xhigh, or opus + high/xhigh | hard sub-problems |
+| ultimate | fable + max (or opus + max) | frontier work, critical verification |

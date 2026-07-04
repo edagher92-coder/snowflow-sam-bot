@@ -38,3 +38,11 @@ commands with `PYTHONPATH=src` unless the package is already pip-installed
    skill that isn't registered.
 4. After adding or renaming any skill, run `--index` so `INDEX.md` stays in
    sync with what is actually on disk.
+
+## Model escalation (seamless — see /auto-escalate)
+
+After routing, gauge the task against the /auto-escalate rubric: run hard
+sub-problems through an `opus` subagent (Agent tool, `model: "opus"`), the
+truly frontier ones through `fable` (one attempt max, only after Opus falls
+short), and mechanical fan-out through `haiku`. The main session stays on
+Sonnet and picks the result up automatically — drop-back needs no action.

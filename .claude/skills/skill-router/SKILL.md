@@ -41,8 +41,9 @@ commands with `PYTHONPATH=src` unless the package is already pip-installed
 
 ## Model escalation (seamless — see /auto-escalate)
 
-After routing, gauge the task against the /auto-escalate rubric: run hard
-sub-problems through an `opus` subagent (Agent tool, `model: "opus"`), the
-truly frontier ones through `fable` (one attempt max, only after Opus falls
-short), and mechanical fan-out through `haiku`. The main session stays on
-Sonnet and picks the result up automatically — drop-back needs no action.
+After routing, gauge the task against the /auto-escalate rubric on BOTH
+dials — model (`haiku`→`sonnet`→`opus`→`fable`) and reasoning effort
+(`low`→`medium`→`high`→`xhigh`→`max`) — via the Agent tool's `model` and
+`effort` params. Quality-first: when torn between rungs on quality-relevant
+work, round UP; go straight to `fable + max` for clearly frontier tasks.
+The main session stays on Sonnet — drop-back needs no action.

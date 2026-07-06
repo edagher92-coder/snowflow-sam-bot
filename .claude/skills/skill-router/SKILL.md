@@ -1,33 +1,48 @@
 ---
 name: skill-router
 description: |
-  [OPS] Rank this repo's Claude Code skills against a natural-language request
+  [OPS] Rank the available Claude Code skills against a natural-language request
   using the auto-registering skill_router CLI (stdlib-only, zero config), and
-  regenerate the skills INDEX.md from the live registry.
+  regenerate a skills INDEX.md from the live registry. Works in any project —
+  the package is bundled alongside this file.
   Use when the user says "which skill should I use", "route this request",
   "list all skills", or "regenerate the skills index".
 ---
 
-# Skill router
+# Skill router (global / user-level copy)
 
-The router reads every `*/SKILL.md` under this repo's skills directory as its
-routing table — no hand-maintained config. It scans `.claude/skills/` when it
-exists, falling back to a top-level `skills/` directory. Drop a new `SKILL.md`
-on disk and it registers automatically.
+The router reads every `*/SKILL.md` under a skills directory as its routing
+table — no hand-maintained config. Drop a new `SKILL.md` on disk and it
+registers automatically. This copy ships the `skill_router/` Python package
+in this same directory, so it works in **any** project, including brand-new
+ones with nothing vendored.
 
-## Commands (run from the repo root)
+## How to invoke
 
-| Task | Command |
+1. **Repo has its own copy** (`skill_router/` at the repo root, or
+   `src/skill_router/` in the Snow Flow monorepo): prefer it —
+   `python -m skill_router "query"` from the repo root
+   (prefix `PYTHONPATH=src` for the monorepo).
+2. **Anywhere else** (new project, no vendored copy): use the bundled package —
+
+   ```bash
+   PYTHONPATH="$HOME/.claude/skills/skill-router" python -m skill_router "query"
+   ```
+
+   With no `-d`, it auto-discovers the nearest skills directory by walking up
+   from the package (`.claude/skills/` preferred, top-level `skills/` fallback);
+   from the user-level install that resolves to `~/.claude/skills/` itself.
+   Point it at a project explicitly with `-d path/to/.claude/skills`.
+
+## Commands
+
+| Task | Flag |
 |---|---|
 | Route a request | `python -m skill_router "audit these drafts"` |
-| Top-N as JSON | `python -m skill_router --json -n 3 "chase overdue invoices"` |
-| List the registry | `python -m skill_router --registry` |
-| Regenerate INDEX.md | `python -m skill_router --index` |
-| Scan another directory | `python -m skill_router -d path/to/skills "query"` |
-
-In repos where the package lives under `src/` (the Snow Flow monorepo), prefix
-commands with `PYTHONPATH=src` unless the package is already pip-installed
-(CI's `pip install -e .` covers this).
+| Top-N as JSON | `--json -n 3` |
+| List the registry | `--registry` |
+| Regenerate INDEX.md | `--index` |
+| Scan another directory | `-d path/to/skills` |
 
 ## Behaviour
 
@@ -36,8 +51,9 @@ commands with `PYTHONPATH=src` unless the package is already pip-installed
    right, invoke that skill (or point the user at it).
 3. If nothing matches, say so and show the `--registry` output — never guess a
    skill that isn't registered.
-4. After adding or renaming any skill, run `--index` so `INDEX.md` stays in
-   sync with what is actually on disk.
+
+> Source of truth: `edagher92-coder/Claude-code-` (`src/skill_router/`).
+> Fix bugs there first, then re-copy here and to the vendored repo copies.
 
 ## Model escalation (seamless — see /auto-escalate)
 

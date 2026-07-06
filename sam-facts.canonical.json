@@ -1,0 +1,32 @@
+{
+  "_generated_by": "tools/export_sam_facts.py from snowflow/reply_engine/pricing.py \u2014 do not hand-edit",
+  "contact": {
+    "phone": "0450 878 787",
+    "email_snowflow": "Sydney@snowflow.com.au",
+    "email_slushieco": "sydney@slushieco.com.au"
+  },
+  "prices": {
+    "SFG1": {
+      "correct": "$2,000",
+      "forbidden": []
+    },
+    "SFX3": {
+      "correct": "$4,100",
+      "forbidden": []
+    },
+    "D200": {
+      "correct": "$4,800",
+      "forbidden": []
+    },
+    "F2-E": {
+      "correct": "$23,995",
+      "forbidden": [
+        "$21,995"
+      ]
+    },
+    "CF8240P": {
+      "correct": "$15,500",
+      "forbidden": []
+    }
+  }
+}

@@ -77,6 +77,25 @@ def test_headline_machines_use_canonical_price():
         )
 
 
+def test_every_five_figure_price_is_canonical():
+    """Closes the partial-drift blind spot: a novel wrong price (e.g. $22,995)
+    alongside one correct occurrence used to pass. Every five-figure ($XX,XXX)
+    price in the file must be one the manifest verifies — so any invented
+    machine price fails, wherever it appears (facts, llm_voice, a rule reply)."""
+    import re
+    canonical_five_fig = {
+        spec["correct"] for spec in _manifest()["prices"].values()
+        if re.fullmatch(r"\$\d{2},\d{3}", spec["correct"])
+    }
+    found = set(re.findall(r"\$\d{2},\d{3}", _all_text(_load())))
+    rogue = found - canonical_five_fig
+    assert not rogue, (
+        f"Non-canonical five-figure price(s) {sorted(rogue)} in sam_replies.json. "
+        f"Only manifest-verified prices are allowed: {sorted(canonical_five_fig)}. "
+        f"A machine price was changed/invented without re-syncing from pricing.py."
+    )
+
+
 def test_contact_details_are_canonical():
     data = _load()
     contact = data.get("contact", {})

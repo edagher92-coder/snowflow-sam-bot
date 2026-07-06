@@ -16,6 +16,22 @@
     },
     "D200": {
       "correct": "$4,800",
+      "forbidden": [
+        "$5,500"
+      ]
+    },
+    "BDB7126": {
+      "correct": "$7,995",
+      "forbidden": []
+    },
+    "CF8240G": {
+      "correct": "$13,895",
+      "forbidden": [
+        "$14,995"
+      ]
+    },
+    "CF8240P": {
+      "correct": "$15,500",
       "forbidden": []
     },
     "F2-E": {
@@ -23,10 +39,6 @@
       "forbidden": [
         "$21,995"
       ]
-    },
-    "CF8240P": {
-      "correct": "$15,500",
-      "forbidden": []
     }
   }
 }

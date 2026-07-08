@@ -20,6 +20,46 @@ Routes: `heavy-code` → `kimi-k2.7-code:cloud`, `heavy-reason` → `gpt-oss:120
 **NUMBERS RULE:** never send customer-facing price/quote/invoice/legal here — those
 stay on Claude (Sonnet/Opus). This tool is for heavy NON-stakes work only.
 
+## `claude_status_line.py` — live tier + offline/cloud badge
+
+A cross-platform (Windows/Mac/Linux, plain `python3`, no deps) Claude Code
+`statusLine` command. Shows the active Claude tier every render, plus a live
+badge whenever a **local ("offline")** or **Ollama Cloud** model was used in
+the last 10 minutes — by the classifier hook (`claude-routing-classifier.ps1`)
+or the bridge (`ollama_route.py`), both of which now write a small state file
+(`~/.claude/.routing-status.json`) on every successful Ollama call.
+
+```
+🤖 Sonnet 5
+🤖 Opus 4.8  ·  🖥️ offline (llama3.2:3b, 8s ago)
+🤖 Sonnet 5  ·  ☁️ cloud (gpt-oss:120b-cloud, 2m ago)
+```
+
+Wire it once — this repo already carries it fanned out via the sync-defaults
+mechanism (see `settings.json` in this directory's parent), so most child
+repos get it automatically. To wire it manually (e.g. a `~/.claude/settings.json`
+user-level install), add:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/tools/claude_status_line.py",
+    "refreshInterval": 10
+  }
+}
+```
+
+For a repo-local install (tools land at `<repo>/.claude/tools/`), use the
+relative path instead: `.claude/tools/claude_status_line.py`.
+
+On Windows without Git Bash (shebang execution won't resolve), override the
+command to `python ~/.claude/tools/claude_status_line.py`.
+
+Fails open like everything else in this kit: any error, missing state file,
+or unreachable Ollama → falls back to just the Claude tier badge, never a
+blank or broken line.
+
 ## Main server + Tailscale (multi-PC)
 Both the bridge and the classifier hook read **`CLAUDE_ROUTER_OLLAMA_URL`**
 (default `http://localhost:11434`). Run Ollama on one **main server** (elzydlab)

@@ -39,6 +39,23 @@ $TimeoutSec = 6
 # TRIVIAL -> haiku, NORMAL -> no delegation (answer on the current main model).
 $ModelFor = @{ STAKES = 'opus'; EXTRACTION = 'sonnet'; TRIVIAL = 'haiku' }
 
+# Records the last Ollama engine actually used, for claude_status_line.py to
+# render a live "offline"/"cloud" badge. Best-effort: never breaks the hook.
+function Write-EngineStatus([string]$model) {
+    try {
+        $engine = if ($OllamaBase -match 'ollama\.com') { 'cloud' } else { 'local' }
+        $statusDir = Join-Path $env:USERPROFILE '.claude'
+        if (-not (Test-Path $statusDir)) { New-Item -ItemType Directory -Path $statusDir -Force | Out-Null }
+        @{
+            ts     = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+            engine = $engine
+            model  = $model
+            role   = 'classify'
+            source = 'hook'
+        } | ConvertTo-Json | Set-Content -Path (Join-Path $statusDir '.routing-status.json') -Encoding utf8
+    } catch { }
+}
+
 function Write-Hint([string]$verdict) {
     if ($verdict -eq 'NORMAL') { return }   # no delegation overhead
     if ($verdict -eq 'HEAVY') {
@@ -107,6 +124,7 @@ USER MESSAGE:
     } | ConvertTo-Json -Depth 5
 
     $resp = Invoke-RestMethod -Uri $OllamaUrl -Method Post -Body $body -ContentType 'application/json' -TimeoutSec $TimeoutSec
+    Write-EngineStatus $Model
     $text = ([string]$resp.response).ToUpperInvariant()
 
     # priority-ordered parse: STAKES wins ties (safe direction); unknown -> NORMAL

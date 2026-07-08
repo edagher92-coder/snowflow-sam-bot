@@ -37,6 +37,8 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
 
 API_KEY = os.environ.get("OLLAMA_API_KEY", "").strip()
 # Default to the local hub; if only an API key is set (no explicit URL), target
@@ -99,6 +101,24 @@ def generate(model: str, prompt: str, system: str | None, timeout: int) -> dict:
     return _post("/api/generate", payload, timeout)
 
 
+def _write_status(model: str, role: str) -> None:
+    # Records the engine actually used, for claude_status_line.py to render a
+    # live "offline"/"cloud" badge. Best-effort: never breaks a dispatch.
+    try:
+        engine = "cloud" if (API_KEY or "ollama.com" in BASE) else "local"
+        status_file = Path.home() / ".claude" / ".routing-status.json"
+        status_file.parent.mkdir(parents=True, exist_ok=True)
+        status_file.write_text(json.dumps({
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "engine": engine,
+            "model": model,
+            "role": role,
+            "source": "bridge",
+        }), encoding="utf-8")
+    except Exception:
+        pass
+
+
 def main() -> int:
     p = argparse.ArgumentParser(prog="ollama_route", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -134,6 +154,8 @@ def main() -> int:
     except Exception as e:
         print("error: " + _explain(e), file=sys.stderr)
         return 2
+
+    _write_status(model, a.route or "custom")
 
     if a.json:
         print(json.dumps(resp, indent=2))

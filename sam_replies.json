@@ -24,6 +24,7 @@
   "greeting_first_message": "Hey, Sam here from Snow Flow 👋 Real person, quick to reply. To point you the right way in one go: are you after a new machine, a hire for an event, or a service/repair? And what suburb's your venue in? – Sam",
   "away_message": "Hey, Sam here — you've caught us after hours, but your message is safe with me and I'll come straight back in the morning. If a machine's down or you've got an event this week, call or text 0450 878 787 and we'll jump on it. So I'm ready: what machine, and which suburb? – Sam",
   "fallback": "Good question — let me get you a proper answer. Quickest way: tell me if you're after a machine, a hire, or a repair, plus your suburb, and I'll sort it. Or reach the team directly: 0450 878 787 / Sydney@snowflow.com.au. – Sam",
+  "hostility_exit": "No worries — I'll leave it here. If you'd like to reach the team directly, email Sydney@snowflow.com.au or visit snowflow.com.au.",
   "postbacks": {
     "GET_STARTED": "greeting_first_message",
     "TALK_TO_SAM": "greeting_first_message",

@@ -15,7 +15,7 @@ Env:
 LOOP-PROOF: only ever replies to a real inbound text message or a postback. Echoes,
 delivery receipts and read receipts are ignored, so the bot can never answer itself.
 Routing: postback -> keyword rule -> (LLM if key set) -> first-message greeting -> fallback."""
-import os, json, time, hmac, hashlib, urllib.request, urllib.parse, urllib.error, datetime
+import os, json, time, hmac, hashlib, re, urllib.request, urllib.parse, urllib.error, datetime
 from flask import Flask, request, abort
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +30,25 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-haiku-latest")
 GRAPH = "https://graph.facebook.com/v21.0"
 app = Flask(__name__)
 _seen = {}
+_muted = set()  # sender_ids that got the hostility exit line - never replied to again
+
+HOSTILE_RE = re.compile(
+    r"\bf+u+c+k+\s*(?:off+|you|this|it|u)?\b"
+    r"|\bf\*+c?k(?:\s*(?:off+|you))?\b"
+    r"|\bpiss\s*off\b"
+    r"|\bscrew\s*(?:you|off+)\b"
+    r"|\bshut\s*(?:the\s*f+u*c*k*\s*)?up\b"
+    r"|\bst+fu+\b"
+    r"|\bgo\s*to\s*hell\b"
+    r"|\bget\s*lost\b"
+    r"|\beff\s*off\b"
+    r"|\bbugger\s*off\b",
+    re.IGNORECASE,
+)
+
+
+def is_hostile(text):
+    return bool(HOSTILE_RE.search(text or ""))
 
 def within_hours():
     h = REPLIES.get("business_hours", {})
@@ -91,6 +110,15 @@ def llm_reply(text):
         return None
 
 def decide(kind, value, sender_id):
+    if sender_id in _muted:
+        return None  # hostility kill switch: hard stop, no further replies to this sender
+    if kind == "text" and is_hostile(value):
+        _muted.add(sender_id)
+        return REPLIES.get(
+            "hostility_exit",
+            "No worries — I'll leave it here. If you'd like to reach the team directly, "
+            "email Sydney@snowflow.com.au or visit snowflow.com.au.",
+        )
     if kind == "postback":
         return resolve(REPLIES.get("postbacks", {}).get(value, value) or "fallback")
     r = reply_for_text(value)
@@ -152,12 +180,16 @@ def webhook():
                     if not frm:
                         continue
                     if msg.get("type") == "text" and msg.get("text", {}).get("body"):
-                        send_whatsapp(frm, decide("text", msg["text"]["body"], frm))
+                        reply = decide("text", msg["text"]["body"], frm)
+                        if reply:
+                            send_whatsapp(frm, reply)
                     elif msg.get("type") == "interactive":
                         inter = msg.get("interactive", {})
                         pid = inter.get("button_reply", {}).get("id") or inter.get("list_reply", {}).get("id")
                         if pid:
-                            send_whatsapp(frm, decide("postback", pid, frm))
+                            reply = decide("postback", pid, frm)
+                            if reply:
+                                send_whatsapp(frm, reply)
         return "ok", 200
     # Messenger + Instagram (page object)
     for entry in data.get("entry", []):
@@ -166,7 +198,9 @@ def webhook():
             if not psid:
                 continue
             if "postback" in ev and ev["postback"].get("payload"):
-                send_meta(psid, decide("postback", ev["postback"]["payload"], psid))
+                reply = decide("postback", ev["postback"]["payload"], psid)
+                if reply:
+                    send_meta(psid, reply)
                 continue
             m = ev.get("message")
             if not m or m.get("is_echo"):
@@ -174,7 +208,9 @@ def webhook():
             text = m.get("text")
             if not text:           # sticker/image/attachment with no text -> ignore (loop-proof)
                 continue
-            send_meta(psid, decide("text", text, psid))
+            reply = decide("text", text, psid)
+            if reply:
+                send_meta(psid, reply)
     return "ok", 200
 
 @app.get("/")

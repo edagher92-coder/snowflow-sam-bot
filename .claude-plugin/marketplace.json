@@ -1,0 +1,135 @@
+{
+  "name": "hq-marketplace",
+  "description": "Local marketplace for Claude HQ plugins, distributed account-wide from the .github father repo.",
+  "owner": {
+    "name": "Elie Dagher"
+  },
+  "plugins": [
+    {
+      "name": "ai-specialists",
+      "description": "AI Specialists For Claude \u2014 70+ named specialist skills (copywriting, SEO, email, sales, invoicing, productivity, and more) plus a start-70 onboarding/router skill.",
+      "source": "./plugins/ai-specialists",
+      "category": "business"
+    },
+    {
+      "name": "community-ai-agent-tooling",
+      "description": "AI & Agent Tooling \u2014 161 community skills.",
+      "source": "./plugins/community-ai-agent-tooling",
+      "category": "community"
+    },
+    {
+      "name": "community-business-ops",
+      "description": "Business Ops & Productivity \u2014 182 community skills.",
+      "source": "./plugins/community-business-ops",
+      "category": "community"
+    },
+    {
+      "name": "community-customer-support",
+      "description": "Customer Support \u2014 29 community skills.",
+      "source": "./plugins/community-customer-support",
+      "category": "community"
+    },
+    {
+      "name": "community-data-analytics",
+      "description": "Data & Analytics \u2014 97 community skills.",
+      "source": "./plugins/community-data-analytics",
+      "category": "community"
+    },
+    {
+      "name": "community-design-creative",
+      "description": "Design & Creative \u2014 91 community skills.",
+      "source": "./plugins/community-design-creative",
+      "category": "community"
+    },
+    {
+      "name": "community-dev-engineering",
+      "description": "Dev & Engineering \u2014 597 community skills.",
+      "source": "./plugins/community-dev-engineering",
+      "category": "community"
+    },
+    {
+      "name": "community-devops-infra",
+      "description": "DevOps & Infra \u2014 129 community skills.",
+      "source": "./plugins/community-devops-infra",
+      "category": "community"
+    },
+    {
+      "name": "community-education-training",
+      "description": "Education & Training \u2014 28 community skills.",
+      "source": "./plugins/community-education-training",
+      "category": "community"
+    },
+    {
+      "name": "community-email-newsletters",
+      "description": "Email & Newsletters \u2014 36 community skills.",
+      "source": "./plugins/community-email-newsletters",
+      "category": "community"
+    },
+    {
+      "name": "community-finance-invoicing",
+      "description": "Finance & Invoicing \u2014 41 community skills.",
+      "source": "./plugins/community-finance-invoicing",
+      "category": "community"
+    },
+    {
+      "name": "community-hr-recruiting",
+      "description": "HR & Recruiting \u2014 36 community skills.",
+      "source": "./plugins/community-hr-recruiting",
+      "category": "community"
+    },
+    {
+      "name": "community-legal-regulated",
+      "description": "Legal & Regulated Advice \u2014 57 community skills.",
+      "source": "./plugins/community-legal-regulated",
+      "category": "community"
+    },
+    {
+      "name": "community-marketing-content",
+      "description": "Marketing & Content \u2014 113 community skills.",
+      "source": "./plugins/community-marketing-content",
+      "category": "community"
+    },
+    {
+      "name": "community-other",
+      "description": "Other \u2014 26 community skills.",
+      "source": "./plugins/community-other",
+      "category": "community"
+    },
+    {
+      "name": "community-sales-crm",
+      "description": "Sales & CRM \u2014 44 community skills.",
+      "source": "./plugins/community-sales-crm",
+      "category": "community"
+    },
+    {
+      "name": "community-security-research",
+      "description": "Security Research \u2014 83 community skills.",
+      "source": "./plugins/community-security-research",
+      "category": "community"
+    },
+    {
+      "name": "community-seo-web",
+      "description": "SEO & Web \u2014 80 community skills.",
+      "source": "./plugins/community-seo-web",
+      "category": "community"
+    },
+    {
+      "name": "community-social-media",
+      "description": "Social Media \u2014 33 community skills.",
+      "source": "./plugins/community-social-media",
+      "category": "community"
+    },
+    {
+      "name": "community-video-audio-media",
+      "description": "Video & Audio & Media \u2014 22 community skills.",
+      "source": "./plugins/community-video-audio-media",
+      "category": "community"
+    },
+    {
+      "name": "community-writing-editing",
+      "description": "Writing & Editing \u2014 55 community skills.",
+      "source": "./plugins/community-writing-editing",
+      "category": "community"
+    }
+  ]
+}

@@ -32,6 +32,32 @@
     "explanatory-output-style@claude-plugins-official": true,
     "learning-output-style@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "ai-specialists@hq-marketplace": true,
+    "community-ai-agent-tooling@hq-marketplace": true,
+    "community-business-ops@hq-marketplace": true,
+    "community-customer-support@hq-marketplace": true,
+    "community-data-analytics@hq-marketplace": true,
+    "community-design-creative@hq-marketplace": true,
+    "community-dev-engineering@hq-marketplace": true,
+    "community-devops-infra@hq-marketplace": true,
+    "community-education-training@hq-marketplace": true,
+    "community-email-newsletters@hq-marketplace": true,
+    "community-finance-invoicing@hq-marketplace": true,
+    "community-hr-recruiting@hq-marketplace": true,
+    "community-legal-regulated@hq-marketplace": true,
+    "community-marketing-content@hq-marketplace": true,
+    "community-other@hq-marketplace": true,
+    "community-sales-crm@hq-marketplace": true,
+    "community-security-research@hq-marketplace": true,
+    "community-seo-web@hq-marketplace": true,
+    "community-social-media@hq-marketplace": true,
+    "community-video-audio-media@hq-marketplace": true,
+    "community-writing-editing@hq-marketplace": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/tools/claude_status_line.py",
+    "refreshInterval": 10
   }
 }

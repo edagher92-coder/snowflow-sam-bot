@@ -130,6 +130,42 @@
       "description": "Writing & Editing \u2014 55 community skills.",
       "source": "./plugins/community-writing-editing",
       "category": "community"
+    },
+    {
+      "name": "watch",
+      "description": "Give Claude the ability to watch any video \u2014 downloads via yt-dlp, captions or Whisper transcription, ffmpeg frame extraction. From bradautomates/claude-video.",
+      "source": "./plugins/watch",
+      "category": "external"
+    },
+    {
+      "name": "notebooklm",
+      "description": "Complete programmatic access to Google NotebookLM \u2014 create notebooks, add sources (URL/YouTube/PDF/audio/video), generate all artifact types (incl. podcasts), download results. From teng-lin/notebooklm-py.",
+      "source": "./plugins/notebooklm",
+      "category": "external"
+    },
+    {
+      "name": "graphify-knowledge-graph",
+      "description": "Map any folder (code/docs/PDFs/images/video) into a queryable knowledge graph \u2014 tree-sitter AST for code, semantic pass for the rest. From Graphify-Labs/graphify. NOT the same as this account's own anytechie-graphify bar-chart CLI.",
+      "source": "./plugins/graphify-knowledge-graph",
+      "category": "external"
+    },
+    {
+      "name": "obsidian",
+      "description": "Create and edit Obsidian vault files \u2014 Markdown, Bases, Canvas. 5 skills. From kepano/obsidian-skills.",
+      "source": "./plugins/obsidian",
+      "category": "external"
+    },
+    {
+      "name": "impeccable",
+      "description": "Design fluency for frontend development \u2014 1 skill, 23 commands, 45 deterministic anti-pattern detectors. From pbakaus/impeccable.",
+      "source": "./plugins/impeccable",
+      "category": "external"
+    },
+    {
+      "name": "ponytail",
+      "description": "Lazy senior dev mode \u2014 simplest working solution, YAGNI, stdlib-first. 6 skills. From DietrichGebert/ponytail.",
+      "source": "./plugins/ponytail",
+      "category": "external"
     }
   ]
 }

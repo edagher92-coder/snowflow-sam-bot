@@ -87,3 +87,45 @@ settle**: run the test.
 | high | sonnet + high | default working tier |
 | extra high | sonnet + xhigh, or opus + high/xhigh | hard sub-problems |
 | ultimate | fable + max (or opus + max) | frontier work, critical verification |
+
+## Learning loop (self-calibrating — the data flywheel)
+
+The ladder above is the *prior*. Real usage refines it. A bundled calibrator
+(`escalation/`) turns logged outcomes into learned per-signal floors.
+
+**1. Log every escalation decision + its outcome.** After a sub-problem
+resolves, append one record:
+
+```python
+from escalation import Decision, log_decision
+log_decision(Decision(
+    signals=("root-cause-debug",),      # which rubric triggers fired
+    model="opus", effort="xhigh",       # the rung you chose
+    outcome="pass",                      # pass | reescalated | failed
+    task="short description",
+), "~/.claude/escalation-log.jsonl")
+```
+
+- `pass` = solved on the first try at that rung.
+- `reescalated` = the rung was too weak; you had to climb.
+- `failed` = never solved.
+
+**2. Consult the learned floors before choosing.** Read
+`learned-floors.md` (regenerated from the log). When a signal has a
+**confident** learned floor, start there instead of the hand-written default —
+it reflects what has actually worked, correcting BOTH failure modes:
+under-powering (floor rose) and over-paying (floor fell).
+
+**3. Regenerate periodically** (not every session — that defeats efficiency):
+
+```bash
+python -m escalation report --log ~/.claude/escalation-log.jsonl \
+    --out learned-floors.md          # refresh the table
+python -m escalation stats           # quick console summary
+```
+
+**Honesty guard:** a floor only moves once a rung has ≥5 samples AND its
+Wilson lower-bound success rate clears the target (default 0.75) — so a lucky
+small sample can't prematurely change policy. Thin-evidence signals keep the
+rubric default. The policy approaches optimal with data; it does not claim
+perfection.

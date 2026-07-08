@@ -53,7 +53,13 @@
     "community-seo-web@hq-marketplace": true,
     "community-social-media@hq-marketplace": true,
     "community-video-audio-media@hq-marketplace": true,
-    "community-writing-editing@hq-marketplace": true
+    "community-writing-editing@hq-marketplace": true,
+    "watch@hq-marketplace": true,
+    "notebooklm@hq-marketplace": true,
+    "graphify-knowledge-graph@hq-marketplace": true,
+    "obsidian@hq-marketplace": true,
+    "impeccable@hq-marketplace": true,
+    "ponytail@hq-marketplace": true
   },
   "statusLine": {
     "type": "command",

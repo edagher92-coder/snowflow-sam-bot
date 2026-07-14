@@ -24,7 +24,6 @@ this repo.
 
 from __future__ import annotations
 
-import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -67,18 +66,15 @@ def _default_skills_dir(root: Path) -> Path:
 _REPO_ROOT = _find_repo_root()
 DEFAULT_SKILLS_DIR = _default_skills_dir(_REPO_ROOT)
 
-# --- Tunable ranking knob ----------------------------------------------------
-# The scorer weights every shared token by its IDF (inverse document frequency)
-# across the registry, so a token common to many skills ("post", "week")
-# carries little signal while a distinctive one ("canva", "invoice", "stripe")
-# dominates. Trigger-phrase tokens get an extra multiplier because the skill
-# author wrote those phrases to be matched.
-#
-# This replaced an earlier per-field-normalised blend after an eval on 34
-# held-out paraphrases: the old scorer scored 50% precision@1 (it over-rewarded
-# short-field skills sharing a *generic* token), a naive keyword baseline 62%,
-# and this IDF scheme 76.5% (MRR 0.84). See tests/test_router_eval.py.
-TRIGGER_BOOST = 0.5
+# --- Tunable ranking weights -------------------------------------------------
+# These four constants are the router's "knobs". A trigger-phrase hit is the
+# strongest signal (the skill author wrote those phrases to be matched); name
+# and summary overlap are softer corroboration; category is a faint tiebreaker.
+# Tuning these changes routing behaviour without touching the algorithm.
+TRIGGER_WEIGHT = 1.0
+NAME_WEIGHT = 0.6
+SUMMARY_WEIGHT = 0.3
+CATEGORY_WEIGHT = 0.1
 
 # Words too common to carry routing signal. Deliberately small — domain terms
 # like "post", "week", "canva", "meta" must survive so they can do the routing.
@@ -211,89 +207,51 @@ def discover_skills(skills_dir: Path | str = DEFAULT_SKILLS_DIR) -> list[Skill]:
     return skills
 
 
-def _skill_tokens(skill: Skill) -> set[str]:
-    """The skill's full distinctive vocabulary — name, summary, triggers,
-    category — pooled into one bag (the routing 'document')."""
-    text = " ".join(
-        (
-            skill.name.replace("-", " "),
-            skill.summary,
-            " ".join(skill.triggers),
-            skill.category,
-        )
-    )
-    return set(_tokens(text))
-
-
-def _trigger_tokens(skill: Skill) -> set[str]:
-    tokens: set[str] = set()
-    for phrase in skill.triggers:
-        tokens |= set(_tokens(phrase))
-    return tokens
-
-
-def build_idf(skills: Iterable[Skill]) -> dict[str, float]:
-    """Inverse document frequency of every token across the registry.
-
-    Each skill is one document (its pooled vocabulary). A token in many skills
-    gets a low weight; a rare, distinctive one gets a high weight. Returned as a
-    plain dict; unseen tokens fall back to the max weight via
-    :func:`_idf_lookup`.
-    """
-    docs = [_skill_tokens(s) for s in skills]
-    n = len(docs)
-    df: dict[str, int] = {}
-    for doc in docs:
-        for tok in doc:
-            df[tok] = df.get(tok, 0) + 1
-    # +0.5 smoothing keeps weights finite and positive for all df in [1, n].
-    return {tok: math.log((n + 1) / (count + 0.5)) for tok, count in df.items()}
-
-
-def _idf_lookup(idf: dict[str, float] | None, token: str) -> float:
-    """IDF weight for ``token``; 1.0 for every token when no IDF map is given
-    (so a bare ``score_skill(query, skill)`` still ranks by pooled overlap)."""
-    if idf is None:
-        return 1.0
-    if not idf:
-        return 1.0
-    # An unseen token is maximally distinctive → the largest weight in the map.
-    return idf.get(token, max(idf.values()))
-
-
-def score_skill(
-    query: str, skill: Skill, idf: dict[str, float] | None = None
-) -> float:
+def score_skill(query: str, skill: Skill) -> float:
     """Rank how well ``skill`` answers ``query`` (higher is better, 0 = no match).
 
-    IDF-weighted pooled overlap: sum the IDF weight of every query token the
-    skill's vocabulary contains, then add ``TRIGGER_BOOST`` × the IDF weight of
-    the query tokens that appear specifically in an authored trigger phrase.
-    Weighting by IDF is what stops a shared *generic* token ("post", "week")
-    from outranking the skill that shares a *distinctive* one.
+    Baseline algorithm — a weighted blend of four overlap signals:
 
-    ``idf`` is normally supplied by :func:`route` (built from the whole
-    registry). Called without it, every token weighs 1.0 and this degrades to
-    plain pooled-overlap — still monotonic, just less discriminating.
+    1. **Trigger phrases** (strongest): the best token-overlap ratio across the
+       skill's declared "Use when ..." phrases. These were authored to be
+       matched, so a hit here is the most trustworthy signal.
+    2. **Name**: overlap with the skill's own (de-hyphenated) name.
+    3. **Summary**: overlap with the description prose.
+    4. **Category**: a faint bonus when the query names the category.
+
+    The weights live in the module-level ``*_WEIGHT`` constants so behaviour can
+    be tuned without rewriting the algorithm.
     """
     query_tokens = set(_tokens(query))
     if not query_tokens:
         return 0.0
 
-    base = sum(
-        _idf_lookup(idf, tok) for tok in query_tokens & _skill_tokens(skill)
-    )
-    boost = TRIGGER_BOOST * sum(
-        _idf_lookup(idf, tok) for tok in query_tokens & _trigger_tokens(skill)
-    )
-    # Cohesion: reward query tokens that co-occur in a SINGLE authored trigger
-    # phrase, so "queue this post" (one whole add-to-feed trigger) beats a rival
-    # that only matches the same tokens scattered across two separate triggers.
-    cohesion = 0.0
+    score = 0.0
+
+    best_trigger = 0.0
     for phrase in skill.triggers:
-        shared = query_tokens & set(_tokens(phrase))
-        cohesion = max(cohesion, sum(_idf_lookup(idf, tok) for tok in shared))
-    return base + boost + TRIGGER_BOOST * cohesion
+        phrase_tokens = set(_tokens(phrase))
+        if not phrase_tokens:
+            continue
+        overlap = len(query_tokens & phrase_tokens) / len(phrase_tokens)
+        best_trigger = max(best_trigger, overlap)
+    score += TRIGGER_WEIGHT * best_trigger
+
+    name_tokens = set(_tokens(skill.name.replace("-", " ")))
+    if name_tokens:
+        score += NAME_WEIGHT * (len(query_tokens & name_tokens) / len(name_tokens))
+
+    summary_tokens = set(_tokens(skill.summary))
+    if summary_tokens:
+        score += SUMMARY_WEIGHT * (
+            len(query_tokens & summary_tokens) / len(summary_tokens)
+        )
+
+    category_tokens = set(_tokens(skill.category))
+    if category_tokens & query_tokens:
+        score += CATEGORY_WEIGHT
+
+    return score
 
 
 def route(
@@ -310,9 +268,8 @@ def route(
     scores are returned; ``top`` optionally caps the list length.
     """
     registry = list(skills) if skills is not None else discover_skills(skills_dir)
-    idf = build_idf(registry)
     ranked = [
-        (skill, score_skill(query, skill, idf)) for skill in registry
+        (skill, score_skill(query, skill)) for skill in registry
     ]
     ranked = [pair for pair in ranked if pair[1] > 0]
     ranked.sort(key=lambda pair: (-pair[1], pair[0].name))

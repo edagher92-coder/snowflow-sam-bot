@@ -1,9 +1,0 @@
-{
-  "name": "graphify-knowledge-graph",
-  "version": "0.9.9",
-  "description": "Turn any folder of code, docs, papers, images, or videos into a queryable knowledge graph (tree-sitter AST for code, semantic pass for other content). NOT related to this account's own anytechie-graphify (terminal bar-chart CLI) — same upstream project name, different tool, different PyPI package (graphifyy vs anytechie-graphify).",
-  "author": { "name": "Safi Shamsi" },
-  "homepage": "https://graphifylabs.ai",
-  "repository": "https://github.com/Graphify-Labs/graphify",
-  "license": "MIT"
-}

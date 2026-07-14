@@ -75,5 +75,15 @@ and point every other PC at it over Tailscale — no per-PC Ollama install:
    the shared hub. On the main server itself you can leave it as `localhost`.
 3. Install the kit on each PC with `bash claude-defaults/bootstrap.sh --user`.
 
+### Alternate hub — a second PC
+A second PC is also reachable on the tailnet at `100.81.52.33`. Point a machine at
+it the same way instead of elzydlab:
+```
+CLAUDE_ROUTER_OLLAMA_URL=http://100.81.52.33:11434
+```
+That PC needs Ollama running with `OLLAMA_HOST=0.0.0.0` for this to work, same as
+the main server. (Only relevant on a machine actually on the tailnet — a cloud
+sandbox session can't reach either Tailscale address.)
+
 The cloud models still bill your **Ollama Pro** sub, not Claude — that's the point:
 mid-tier load moves off the Claude weekly limit onto the flat-rate Ollama Cloud plan.

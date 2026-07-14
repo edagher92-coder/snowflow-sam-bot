@@ -1,131 +1,55 @@
 ---
 name: auto-escalate
 description: |
-  [EFFICIENCY] Seamless two-dial escalation — model (haiku→sonnet→opus→fable)
-  AND reasoning effort (low→medium→high→xhigh→max) — matched per sub-problem,
-  quality-first: when torn between rungs on quality-relevant work, round UP.
-  Main session stays on Sonnet; drop-back is automatic. Apply silently on
-  every task; also use when the user says "escalate this", "use opus for
-  this", "think harder", "ultimate effort", or "double escalate".
+  [EFFICIENCY] Apply a quality-first two-dial policy across model tier
+  (haiku→claude-sonnet-5→opus→fable) and reasoning effort
+  (low→medium→high→xhigh→max). The pinned main session is Claude Sonnet 5 at
+  high effort. Trigger when the user asks to escalate, use Opus, think harder,
+  take time, do this perfectly, use ultimate effort, or double escalate.
 ---
 
-# Auto-escalation — two dials, quality-first
+# Auto-escalation — Sonnet 5 quality-first
 
-The main session stays on **Sonnet** (the orchestrator). Escalation happens
-per *sub-problem* by spawning a subagent via the **Agent tool**, which takes
-BOTH dials: `model: "haiku"|"opus"|"fable"` and
-`effort: "low"|"medium"|"high"|"xhigh"|"max"`. The subagent returns, the
-session continues on Sonnet — drop-back needs no action. (Only the user can
-change the main model, via `/model`.)
+The pinned main session is **Claude Sonnet 5 at high effort**. A user-selected model always wins; never demote an explicit Opus or Fable selection. Escalate only the bounded sub-problem that needs more capability, then integrate and verify its result in the main task.
 
-## The bias (read first)
-
-**Quality-first, tightly-scoped.** When torn between two rungs on work whose
-quality matters, take the HIGHER rung. Efficiency comes from scoping the
-escalation to the exact sub-problem with a self-contained prompt — never from
-underpowering the brain. One wrong answer costs more than one Opus call.
-
-## Dial 1 — reasoning effort (low → medium → high → xhigh → max)
+## Dial 1 — effort
 
 | Effort | Use for |
 |---|---|
-| low | mechanical: bulk transforms, file inventories, copies, reformatting |
-| medium | routine judgement: template-driven content, simple edits, summaries |
-| high | the working default (matches `effortLevel: high` in settings) |
-| xhigh | hard sub-problems: tricky debugging, careful analysis, edge-case sweeps |
-| max ("ultimate") | the hardest verification/judgement passes; adversarial review |
+| low | Mechanical inventories, copies, formatting, and safe bulk transforms |
+| medium | Routine judgement and template-driven work |
+| high | Default serious work on Sonnet 5 |
+| xhigh | Hard bounded debugging, agentic work, edge-case sweeps, and adversarial review |
+| max | Exceptional final verification or frontier work when the active surface supports it |
 
-**Escalate effort before model when the problem is deep-but-narrow** (one
-gnarly bug, one contract to reason through): `sonnet + xhigh` is often
-cheaper than `opus + high` and just as good on a well-scoped prompt.
+Increase effort before model tier when the problem is deep but narrow. Sonnet 5 at xhigh is the preferred first escalation for a difficult bounded sub-problem.
 
-## Dial 2 — model (haiku → sonnet → opus → fable)
+## Dial 2 — model
 
-**Escalate model when the problem needs breadth of capability**, not just
-depth. Go to an `opus` subagent when ANY of:
-- Root-cause debugging where the cause isn't apparent after the first look.
-- Architecture / design spanning several systems or ~5+ files, or a public
-  interface change.
-- Safety- or compliance-critical output: pricing-engine logic, EOFY/tax
-  phrasing, legal copy, anything the no-fabrication tests guard.
-- High-stakes numbers: board/financial analysis, pricing/budget decisions.
-- **One failed attempt or visible uncertainty** on the current rung.
-- Security-sensitive review.
+- **Haiku:** low-risk mechanical fan-out. Never use it for final high-stakes judgement.
+- **Claude Sonnet 5:** default implementation, analysis, extraction, and orchestration.
+- **Opus 4.8:** financial/legal/safety stakes, system-spanning architecture, security review, unresolved root cause, critical public output, or a Sonnet attempt that failed verification.
+- **Fable:** frontier-scale or long-running work, a failed verified Opus attempt, or explicit user selection. Follow Elie's premium approval rule where one is configured.
 
-Go straight to **`fable` (with `max` effort)** when the task is clearly
-frontier — novel algorithm, deep multi-constraint planning, or quality so
-critical that a second-best answer is a real cost. Otherwise reach fable by
-laddering: Opus attempt fails verification / self-contradicts / reports low
-confidence. Budget: one fable attempt per sub-problem, then surface to the
-user.
+Do not escalate what a deterministic test can settle. Improve the prompt, evidence, context, and verification before escalating solely because the first answer feels uncertain.
 
-De-escalate to `haiku` (+ `low`/`medium` effort) for search, fan-out, and
-mechanical volume.
+## Escalation protocol
 
-## When NOT to escalate anything
+1. Define the exact sub-problem and acceptance test.
+2. Supply a self-contained prompt with relevant evidence, constraints, and required output.
+3. Choose the lowest tier that meets the stakes and difficulty; round up when quality materially matters.
+4. Integrate the result rather than copying it blindly.
+5. Verify with tests, invariants, primary sources, or direct readback.
+6. Escalate one rung if the improved attempt fails verification or uncertainty remains material.
+7. Report any escalation in one concise line in the final response.
 
-Template-driven content, routine edits, quotes via the deterministic reply
-engine, ops/scheduling, doc updates — and **never escalate what a test can
-settle**: run the test.
+## Quality-intent override
 
-## Mechanics
+When Elie says “take your time”, “be serious”, “do this perfectly”, “best possible”, “deep audit”, or “do not stop until verified”:
 
-1. Scope to the *sub-problem*; write a self-contained prompt (subagents start
-   with zero context).
-2. `Agent(prompt, model: "...", effort: "...")` → integrate → continue.
-3. Verify cheaply before accepting (tests, invariants); failed verification
-   is the trigger for the next rung.
-4. Transparency: one line in the final reply, e.g.
-   `escalated: opus/xhigh (root-cause debugging)`.
+1. invoke `frontier-work`;
+2. keep Sonnet 5 at high or xhigh unless stakes or failed verification require Opus;
+3. do not offload the final decision or deliverable to an unverified local/cloud open model;
+4. complete the verification matrix before reporting success.
 
-## Cheat-sheet
-
-| Rung | Typical pairing | For |
-|---|---|---|
-| low | haiku + low/medium | mechanical fan-out |
-| medium | sonnet + medium | routine judgement |
-| high | sonnet + high | default working tier |
-| extra high | sonnet + xhigh, or opus + high/xhigh | hard sub-problems |
-| ultimate | fable + max (or opus + max) | frontier work, critical verification |
-
-## Learning loop (self-calibrating — the data flywheel)
-
-The ladder above is the *prior*. Real usage refines it. A bundled calibrator
-(`escalation/`) turns logged outcomes into learned per-signal floors.
-
-**1. Log every escalation decision + its outcome.** After a sub-problem
-resolves, append one record:
-
-```python
-from escalation import Decision, log_decision
-log_decision(Decision(
-    signals=("root-cause-debug",),      # which rubric triggers fired
-    model="opus", effort="xhigh",       # the rung you chose
-    outcome="pass",                      # pass | reescalated | failed
-    task="short description",
-), "~/.claude/escalation-log.jsonl")
-```
-
-- `pass` = solved on the first try at that rung.
-- `reescalated` = the rung was too weak; you had to climb.
-- `failed` = never solved.
-
-**2. Consult the learned floors before choosing.** Read
-`learned-floors.md` (regenerated from the log). When a signal has a
-**confident** learned floor, start there instead of the hand-written default —
-it reflects what has actually worked, correcting BOTH failure modes:
-under-powering (floor rose) and over-paying (floor fell).
-
-**3. Regenerate periodically** (not every session — that defeats efficiency):
-
-```bash
-python -m escalation report --log ~/.claude/escalation-log.jsonl \
-    --out learned-floors.md          # refresh the table
-python -m escalation stats           # quick console summary
-```
-
-**Honesty guard:** a floor only moves once a rung has ≥5 samples AND its
-Wilson lower-bound success rate clears the target (default 0.75) — so a lucky
-small sample can't prematurely change policy. Thin-evidence signals keep the
-rubric default. The policy approaches optimal with data; it does not claim
-perfection.
+The policy improves observable reliability; it does not claim perfect answers or reproduction of another model's hidden reasoning.

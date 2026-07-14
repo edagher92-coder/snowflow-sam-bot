@@ -1,46 +1,26 @@
 #requires -Version 5.1
 <#
-  claude-routing-classifier.ps1  --  UserPromptSubmit hook
-  Model Routing Policy v5.0 (Automatic Tier Delegation).
+  claude-routing-classifier.ps1 -- UserPromptSubmit hook
+  Model Routing Policy v5.1 (Sonnet 5 quality-intent guard).
 
-  Classifies each user message into STAKES / EXTRACTION / HEAVY / TRIVIAL / NORMAL
-  and injects a ROUTING HINT for where to send the substantive work:
-    STAKES     -> Claude Opus (money/legal/irreversible/customer-facing)
-    EXTRACTION -> Claude Sonnet (structured data out of text)
-    HEAVY      -> Ollama Cloud Pro via tools/ollama_route.py (bulk non-stakes
-                  coding/reasoning — saves Claude quota + mid-tier load)
-    TRIVIAL    -> Claude Haiku (or the local Ollama free floor)
-    NORMAL     -> the current main model (no delegation)
+  Deterministic gates run before the optional local classifier:
+    STAKES  -> Opus review/delegation
+    QUALITY -> pinned Claude Sonnet 5 + frontier-work (or a stronger model
+               already selected by Elie)
 
-  Server URL is overridable via CLAUDE_ROUTER_OLLAMA_URL so a secondary PC can
-  reach the MAIN server (elzydlab) over Tailscale.
-
-  Guarantees:
-   * Money / refund / price / invoice / legal / tax terms -> STAKES via a
-     deterministic regex gate that runs BEFORE the model, so a flaky or offline
-     model can never demote a money task, and money never becomes HEAVY.
-   * Deterministic model call (temperature 0, fixed seed, greedy).
-   * Single-word output enforced by prompt + priority-ordered parsing
-     (STAKES wins ties -- the safe direction).
-   * FAILS OPEN: any error / timeout / unclear verdict -> emit nothing, exit 0.
+  Remaining prompts are classified as EXTRACTION / HEAVY / TRIVIAL / NORMAL.
+  HEAVY open-model output is draft material only; Claude must inspect and
+  verify it before use. The hook fails open and never blocks a prompt.
 #>
 
 $ErrorActionPreference = 'Stop'
 
-# ---- config ----
-# Base URL is overridable so a secondary PC points at the MAIN server over
-# Tailscale: set CLAUDE_ROUTER_OLLAMA_URL=http://elzydlab.tail76b098.ts.net:11434
 $OllamaBase = if ($env:CLAUDE_ROUTER_OLLAMA_URL) { $env:CLAUDE_ROUTER_OLLAMA_URL.TrimEnd('/') } else { 'http://localhost:11434' }
 $OllamaUrl  = "$OllamaBase/api/generate"
 $Model      = 'llama3.2:3b'
 $TimeoutSec = 6
+$ModelFor   = @{ STAKES = 'opus'; QUALITY = 'claude-sonnet-5'; EXTRACTION = 'claude-sonnet-5'; TRIVIAL = 'haiku' }
 
-# STAKES -> opus (fable only if opus-class already failed), EXTRACTION -> sonnet,
-# TRIVIAL -> haiku, NORMAL -> no delegation (answer on the current main model).
-$ModelFor = @{ STAKES = 'opus'; EXTRACTION = 'sonnet'; TRIVIAL = 'haiku' }
-
-# Records the last Ollama engine actually used, for claude_status_line.py to
-# render a live "offline"/"cloud" badge. Best-effort: never breaks the hook.
 function Write-EngineStatus([string]$model) {
     try {
         $engine = if ($OllamaBase -match 'ollama\.com') { 'cloud' } else { 'local' }
@@ -57,65 +37,73 @@ function Write-EngineStatus([string]$model) {
 }
 
 function Write-Hint([string]$verdict) {
-    if ($verdict -eq 'NORMAL') { return }   # no delegation overhead
-    if ($verdict -eq 'HEAVY') {
-        Write-Output ("ROUTING HINT (Model Routing Policy v5.0): HEAVY non-stakes work -> offload to " +
-            "Ollama Cloud (Pro) to save Claude quota and mid-tier load. Run: python " +
-            "`"$env:USERPROFILE\.claude\tools\ollama_route.py`" --route heavy-code (bulk coding/refactors) " +
-            "or --route heavy-reason (long reasoning/summarising), then review the output. NEVER send " +
-            "money / pricing / invoice / legal / customer-facing text there -- those stay on Claude.")
+    if ($verdict -eq 'NORMAL') { return }
+
+    if ($verdict -eq 'QUALITY') {
+        Write-Output ("ROUTING HINT (Model Routing Policy v5.1): explicit quality intent detected. " +
+            "Keep this work on the pinned claude-sonnet-5 model at high effort, use xhigh for the " +
+            "hardest bounded pass when supported, and invoke the frontier-work skill. If Elie " +
+            "already selected Opus or Fable, do not demote it. Do not report completion until the " +
+            "acceptance checks and important failure paths are verified.")
         return
     }
+
+    if ($verdict -eq 'HEAVY') {
+        Write-Output ("ROUTING HINT (Model Routing Policy v5.1): HEAVY non-stakes work may use " +
+            "Ollama Cloud as draft-only assistance. Run python `"$env:USERPROFILE\.claude\tools\ollama_route.py`" " +
+            "with --route heavy-code or --route heavy-reason, then have Claude Sonnet 5 inspect, " +
+            "integrate, and verify the result. Never send money, pricing, invoice, legal, private " +
+            "customer data, or final customer-facing text to that tier.")
+        return
+    }
+
     $model = $ModelFor[$verdict]
     if (-not $model) { return }
-    Write-Output ("ROUTING HINT (Model Routing Policy v5.0): this message classified $verdict -> " +
-        "delegate the substantive answer to an Agent with model:`"$model`". Quality-first: if that " +
-        "tier is unsure or wrong for any reason, escalate one tier up and re-run. Escalating to " +
-        "Fable needs a one-time YES from Elie first (premium / credits). A manual /model choice by " +
-        "Elie always overrides this hint.")
+    Write-Output ("ROUTING HINT (Model Routing Policy v5.1): this message classified $verdict -> " +
+        "use model `"$model`" for the substantive work. Improve context and verification before " +
+        "escalating solely for quality. If that tier fails verification or the stakes justify it, " +
+        "escalate one tier. A manual model choice by Elie always overrides this hint.")
 }
 
 try {
-    # --- read the hook payload (fail open if absent/garbled) ---
     $raw = [Console]::In.ReadToEnd()
     if ([string]::IsNullOrWhiteSpace($raw)) { exit 0 }
     $prompt = [string]($raw | ConvertFrom-Json).prompt
     if ([string]::IsNullOrWhiteSpace($prompt)) { exit 0 }
 
-    # --- deterministic high-stakes gate (fires even if Ollama is down) ---
-    # Over-escalation here is the safe direction: a money task must never demote.
+    # Financial, legal, tax, irreversible, and customer-facing stakes always
+    # outrank quality intent. Over-escalation is the safe direction here.
     $stakesRegex = '(?i)(\$\s?\d|\brefund|\binvoice|\bprice|\bpricing|\bquote\b|\bcharge\b|\bpayment|' +
                    '\bdeposit|\bdiscount|\bAUD\b|\bGST\b|\bBAS\b|\bowe\b|\boverdue|\bdebtor|\bbilling|' +
                    '\bcontract\b|\blegal\b|\btax\b)'
     if ($prompt -match $stakesRegex) { Write-Hint 'STAKES'; exit 0 }
 
-    # --- deterministic LLM classification ---
-    $instructions = @'
-You are a strict routing classifier. Read the USER MESSAGE and reply with EXACTLY ONE WORD from this set: STAKES EXTRACTION HEAVY TRIVIAL NORMAL. No explanation, no punctuation, no other text.
+    # Elie's explicit quality phrases bypass the quota-saving HEAVY route.
+    $qualityRegex = '(?i)(\btake (your )?time\b|\bbe (more )?serious\b|\bdo (this|it) perfectly\b|' +
+                    '\bbest possible\b|\bdeep (work|audit|review|analysis)\b|\bthorough(ly)?\b|' +
+                    '\bdo not stop until\b|\bdon''t stop until\b|\buntil (it is |it''s )?verified\b|' +
+                    '\bact,? think,? (and )?(reason|ressom) like fable\b)'
+    if ($prompt -match $qualityRegex) { Write-Hint 'QUALITY'; exit 0 }
 
-STAKES = money, prices, quotes, invoices, refunds, charges, payments, discounts; legal/tax/compliance; irreversible or customer-facing final content; complex architecture. If money or a customer-facing decision is involved, answer STAKES.
-EXTRACTION = pull structured data (names, dates, amounts, addresses, line items) out of unstructured text; parsing, not deciding or acting.
-HEAVY = large NON-stakes coding, refactors, long reasoning, or bulk summarising where a big open model suffices and there is no money/customer/legal element. Prefer this to spending premium Claude tiers on grunt work.
-TRIVIAL = mechanical low-stakes work: reformatting, renaming, a one-line lookup, a quick fact with no money or customer impact.
-NORMAL = everything else / general well-specified work. Use NORMAL only when none of the above clearly applies.
+    $instructions = @'
+You are a strict routing classifier. Read the USER MESSAGE and reply with EXACTLY ONE WORD from this set: STAKES EXTRACTION HEAVY TRIVIAL NORMAL. No explanation, punctuation, or other text.
+
+STAKES = money, prices, quotes, invoices, refunds, charges, payments, discounts; legal/tax/compliance; irreversible or final customer-facing content; complex architecture.
+EXTRACTION = pull structured data out of unstructured text; parsing, not deciding or acting.
+HEAVY = large NON-stakes coding, refactors, long reasoning, or bulk summarising where an open model can prepare a draft and there is no money/customer/legal element.
+TRIVIAL = mechanical low-stakes work: reformatting, renaming, a one-line lookup, or a quick fact with no consequential impact.
+NORMAL = everything else. Use NORMAL when none of the above clearly applies.
 
 Examples:
 refund the customer $50 => STAKES
-what is our price for the SFX3 => STAKES
-send this quote to the client => STAKES
 pull the invoice number and due date from this email => EXTRACTION
-extract all suburb names from this list => EXTRACTION
 refactor this 600-line module for readability => HEAVY
-summarise these 15 log files into one report => HEAVY
 rename these variables to camelCase => TRIVIAL
-what is the capital of France => TRIVIAL
 plan next week's content => NORMAL
-explain how this function works => NORMAL
 
 USER MESSAGE:
 '@
     $fullPrompt = $instructions + "`n" + $prompt + "`n=> "
-
     $body = @{
         model   = $Model
         prompt  = $fullPrompt
@@ -127,7 +115,6 @@ USER MESSAGE:
     Write-EngineStatus $Model
     $text = ([string]$resp.response).ToUpperInvariant()
 
-    # priority-ordered parse: STAKES wins ties (safe direction); unknown -> NORMAL
     $verdict = 'NORMAL'
     if     ($text -match 'STAKES')     { $verdict = 'STAKES' }
     elseif ($text -match 'EXTRACTION') { $verdict = 'EXTRACTION' }
@@ -139,6 +126,5 @@ USER MESSAGE:
     exit 0
 }
 catch {
-    # Fail open: Ollama offline, timeout, bad JSON, anything -> no hint, never block.
     exit 0
 }

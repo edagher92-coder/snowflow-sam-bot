@@ -57,26 +57,34 @@ way this table goes wrong, and a dated suffix invented from memory fails at the 
 
 | Model | Model ID | Price /1M (in/out) | Context | Relative speed | Use for |
 |---|---|---|---|---|---|
-| **Haiku 4.5** | `claude-haiku-4-5-20251001` | $1 / $5 | 200K | fastest | trivial, mechanical, high-volume, latency-critical-simple: lookups, file/path search, formatting, classification, rote edits |
-| **Sonnet 5** | `claude-sonnet-5` | $3 / $15 (0.6× Opus) | 1M | fast | **efficiency workhorse** — delegated subagents, fan-out, most coding, edits, reviews, Q&A, well-specified tasks, prose |
+| **Haiku 4.5** | `claude-haiku-4-5` | $1 / $5 | 200K | fastest | trivial, mechanical, high-volume, latency-critical-simple: lookups, file/path search, formatting, classification, rote edits |
+| **Sonnet 5** | `claude-sonnet-5` | `[CONFIRM — sources disagree, see below]` | 1M | fast | **efficiency workhorse** — delegated subagents, fan-out, most coding, edits, reviews, Q&A, well-specified tasks, prose |
 | **Opus 5** | `claude-opus-5` | $5 / $25 | 1M | slower (reasons more) | **pinned main-session default** — hard reasoning, long-horizon agentic, gnarly multi-file debugging, architecture, design, high-stakes/irreversible, security, ambiguous-but-important, anything that failed on a lower tier |
-| **Fable 5.1** | `claude-fable-5-1` | `[CONFIRM: not in any verified source]` | `[CONFIRM]` | slowest | only on explicit request, or frontier reasoning Opus genuinely can't carry |
+| **Fable 5.1** | `claude-fable-5-1` | $10 / $50 | 1M | slowest | only on explicit request, or frontier reasoning Opus genuinely can't carry |
 
-Two notes on that table, because both have bitten:
+Three notes on that table, because each has bitten:
 
 - **Haiku is the only 200K model here.** The rest are 1M. Fan-out that dumps a large corpus into a Haiku
-  subagent will truncate rather than fail loudly — size the slice, don't assume the window.
-- **Fable 5.1 supersedes Fable 5** (`claude-fable-5`, $10 / $50, 1M). Its ID is confirmed; its price is
-  **not in any source available here**, so it is a `[CONFIRM]` gap rather than a guess — read the
-  `claude-api` skill or `client.models.retrieve()` before quoting a Fable cost to anyone. Sonnet 5 also
-  shipped with introductory pricing of $2 / $10 which **expired 2026-08-31**; $3 / $15 is the current rate.
+  subagent will truncate rather than fail loudly — size the slice, don't assume the window. Use the alias
+  `claude-haiku-4-5`, not the dated full ID `claude-haiku-4-5-20251001`: the alias is what the API docs
+  mark "use this", and a dated suffix is the thing this table warns about two lines up.
+- **Fable 5.1 supersedes Fable 5** (`claude-fable-5`), at the same per-token price — $10 / $50 per MTok,
+  1M context. Cache reads differ: $0.25/MTok on 5.1 against $1/MTok on Fable 5.
+- **Sonnet 5's per-token price is an open `[CONFIRM]`, and that is deliberate.** Two sources in this
+  account disagree: `.claude/skills/apis/SKILL.md` says **$3 / $15**, while the bundled `claude-api`
+  skill (`shared/model-migration.md`) says **$2 / $10** in three separate places. Resolve it with
+  `client.models.retrieve('claude-sonnet-5')` or the live pricing page, then fill it in and delete this
+  note. **Do not reconcile two disagreeing sources with a story** — an earlier revision of this file
+  invented "introductory pricing that expired" to make them agree, which is exactly the fabrication the
+  NUMBERS RULE exists to stop, committed in the file that teaches it.
 
-Sonnet 5 is exactly 0.6× Opus 5 on both input and output → ~40% cheaper per token. That ratio survived the
-Sonnet 4.6 → 5 move unchanged, but it is a coincidence of the current price list, not a law — **re-derive it
-whenever either price moves.** **Cost is the reliable saving; speed is task-dependent** — on small,
-well-specified tasks Opus can be *more* decisive (fewer tool calls, fewer tokens), so don't promise Sonnet is
-"faster" in general. Don't bias model choice on latency alone; choose on the quality/cost axes and treat
-speed as a tie-breaker for light, interactive turns.
+**The Sonnet↔Opus ratio therefore cannot be stated right now.** At $3 / $15 Sonnet 5 is 0.6× Opus 5
+(~40% cheaper per token); at $2 / $10 it is 0.4× (~60% cheaper). Re-derive it once the price above is
+resolved, and re-derive it again whenever either price moves — a ratio that survives a generation change
+untouched looks like a law and is not. **Cost is the reliable saving; speed is task-dependent** — on
+small, well-specified tasks Opus can be *more* decisive (fewer tool calls, fewer tokens), so don't promise
+Sonnet is "faster" in general. Don't bias model choice on latency alone; choose on the quality/cost axes
+and treat speed as a tie-breaker for light, interactive turns.
 
 ## Keeping the tiers current (new model releases)
 
@@ -88,17 +96,21 @@ or anything that supersedes Opus 5), do **not** guess its model ID, price, or ca
    API directly (`client.models.list()` / `client.models.retrieve(id)`) — for the exact string and rates.
 2. **Slot it into the tier table by capability and price**: a new flagship that beats Opus 5 takes the
    top "hard reasoning / stakes-gate" slot; re-baseline the Sonnet↔top-tier cost ratio against the new
-   prices (today's 0.6× is specific to Sonnet 5 vs Opus 5).
+   prices (the Sonnet↔Opus ratio is currently underivable — see the tier table).
 3. Today's most-capable model is **Fable 5.1** (`claude-fable-5-1`, premium / explicit-request only),
    superseding Fable 5; **Mythos 5** is the same class behind Project Glasswing. A genuinely new
    flagship is added the same way — verify, then slot.
-4. **A price you cannot source is a `[CONFIRM]` gap, never an estimate.** The NUMBERS RULE applies to
-   model pricing exactly as it applies to a customer quote: carrying a plausible-looking rate into a
-   budget decision is the same failure as carrying one into an invoice. Fable 5.1's rate sits in the
-   table as a gap for precisely this reason.
-5. **Record the refresh date** at the top of the tier table when you touch it. A table with no date reads
-   as current forever, and a lapsed introductory price (Sonnet 5's ran to 2026-08-31) is invisible
-   otherwise.
+4. **A price you cannot source is a `[CONFIRM]` gap, never an estimate — and two sources that
+   disagree are also a gap.** The NUMBERS RULE applies to model pricing exactly as it applies to a
+   customer quote: carrying a plausible-looking rate into a budget decision is the same failure as
+   carrying one into an invoice. The trap is not the number you know you lack; it is the one you
+   think you can infer. Reconciling a conflict with a plausible story ("it must have been
+   introductory pricing that expired") is fabrication wearing the clothes of diligence.
+5. **Before declaring a gap, search properly.** A gap asserts "no source has this", which is itself a
+   claim. `shared/models.md` in the bundled `claude-api` skill carries the full roster with prices,
+   context windows and aliases; grep it before concluding anything is unsourced.
+6. **Record the refresh date** at the top of the tier table when you touch it. A table with no date
+   reads as current forever.
 
 The algorithm itself (stakes gate → score → fan-out → verify → downshift) is **model-agnostic** and does
 not change when the roster does — only the tier table and the cost ratio need refreshing.

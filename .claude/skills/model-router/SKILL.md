@@ -1,7 +1,7 @@
 ---
 name: model-router
 description: >-
-  Quality-first algorithm for choosing the Claude model (Haiku 4.5 / Sonnet 4.6 / Opus 5 / Fable 5),
+  Quality-first algorithm for choosing the Claude model (Haiku 4.5 / Sonnet 5 / Opus 5 / Fable 5.1),
   the effort level (low→max), whether to delegate to subagents, and whether to use Fast mode — per task,
   to get the best possible output at the lowest latency and weekly-limit cost that does NOT sacrifice
   quality. Invoke when deciding how to run work, when results feel slow or expensive, or to set up
@@ -52,17 +52,31 @@ If lowering cost or latency could plausibly degrade the result, **don't** — st
 
 ## Model tiers
 
-| Model | Price /1M (in/out) | Relative speed | Use for |
-|---|---|---|---|
-| **Haiku 4.5** | $1 / $5 | fastest | trivial, mechanical, high-volume, latency-critical-simple: lookups, file/path search, formatting, classification, rote edits |
-| **Sonnet 4.6** | $3 / $15 (0.6× Opus) | fast | **default daily driver** — most coding, edits, reviews, Q&A, well-specified tasks, prose |
-| **Opus 5** | $5 / $25 | slower (reasons more) | hard reasoning, long-horizon agentic, gnarly multi-file debugging, architecture, design, high-stakes/irreversible, security, ambiguous-but-important, anything that failed on a lower tier |
-| **Fable 5** | $10 / $50 | slowest | only on explicit request, or frontier reasoning Opus genuinely can't carry |
+Roster refreshed 2026-09-19. Carry the model **ID**, not just the name — a guessed ID is the most common
+way this table goes wrong, and a dated suffix invented from memory fails at the API rather than falling back.
 
-Sonnet is exactly 0.6× Opus on both input and output → ~40% cheaper per token. **Cost is the reliable
-saving; speed is task-dependent** — on small, well-specified tasks Opus can be *more* decisive (fewer tool
-calls, fewer tokens), so don't promise Sonnet is "faster" in general. Don't bias model choice on latency
-alone; choose on the quality/cost axes and treat speed as a tie-breaker for light, interactive turns.
+| Model | Model ID | Price /1M (in/out) | Context | Relative speed | Use for |
+|---|---|---|---|---|---|
+| **Haiku 4.5** | `claude-haiku-4-5-20251001` | $1 / $5 | 200K | fastest | trivial, mechanical, high-volume, latency-critical-simple: lookups, file/path search, formatting, classification, rote edits |
+| **Sonnet 5** | `claude-sonnet-5` | $3 / $15 (0.6× Opus) | 1M | fast | **efficiency workhorse** — delegated subagents, fan-out, most coding, edits, reviews, Q&A, well-specified tasks, prose |
+| **Opus 5** | `claude-opus-5` | $5 / $25 | 1M | slower (reasons more) | **pinned main-session default** — hard reasoning, long-horizon agentic, gnarly multi-file debugging, architecture, design, high-stakes/irreversible, security, ambiguous-but-important, anything that failed on a lower tier |
+| **Fable 5.1** | `claude-fable-5-1` | `[CONFIRM: not in any verified source]` | `[CONFIRM]` | slowest | only on explicit request, or frontier reasoning Opus genuinely can't carry |
+
+Two notes on that table, because both have bitten:
+
+- **Haiku is the only 200K model here.** The rest are 1M. Fan-out that dumps a large corpus into a Haiku
+  subagent will truncate rather than fail loudly — size the slice, don't assume the window.
+- **Fable 5.1 supersedes Fable 5** (`claude-fable-5`, $10 / $50, 1M). Its ID is confirmed; its price is
+  **not in any source available here**, so it is a `[CONFIRM]` gap rather than a guess — read the
+  `claude-api` skill or `client.models.retrieve()` before quoting a Fable cost to anyone. Sonnet 5 also
+  shipped with introductory pricing of $2 / $10 which **expired 2026-08-31**; $3 / $15 is the current rate.
+
+Sonnet 5 is exactly 0.6× Opus 5 on both input and output → ~40% cheaper per token. That ratio survived the
+Sonnet 4.6 → 5 move unchanged, but it is a coincidence of the current price list, not a law — **re-derive it
+whenever either price moves.** **Cost is the reliable saving; speed is task-dependent** — on small,
+well-specified tasks Opus can be *more* decisive (fewer tool calls, fewer tokens), so don't promise Sonnet is
+"faster" in general. Don't bias model choice on latency alone; choose on the quality/cost axes and treat
+speed as a tie-breaker for light, interactive turns.
 
 ## Keeping the tiers current (new model releases)
 
@@ -74,10 +88,17 @@ or anything that supersedes Opus 5), do **not** guess its model ID, price, or ca
    API directly (`client.models.list()` / `client.models.retrieve(id)`) — for the exact string and rates.
 2. **Slot it into the tier table by capability and price**: a new flagship that beats Opus 5 takes the
    top "hard reasoning / stakes-gate" slot; re-baseline the Sonnet↔top-tier cost ratio against the new
-   prices (today's 0.6× is specific to Sonnet 4.6 vs Opus 5).
-3. Today's most-capable "5"-tier model is **Fable 5** (already listed, premium / explicit-request only);
-   **Mythos 5** is the same thing behind Project Glasswing. A genuinely new "5.0" flagship is added the
-   same way — verify, then slot.
+   prices (today's 0.6× is specific to Sonnet 5 vs Opus 5).
+3. Today's most-capable model is **Fable 5.1** (`claude-fable-5-1`, premium / explicit-request only),
+   superseding Fable 5; **Mythos 5** is the same class behind Project Glasswing. A genuinely new
+   flagship is added the same way — verify, then slot.
+4. **A price you cannot source is a `[CONFIRM]` gap, never an estimate.** The NUMBERS RULE applies to
+   model pricing exactly as it applies to a customer quote: carrying a plausible-looking rate into a
+   budget decision is the same failure as carrying one into an invoice. Fable 5.1's rate sits in the
+   table as a gap for precisely this reason.
+5. **Record the refresh date** at the top of the tier table when you touch it. A table with no date reads
+   as current forever, and a lapsed introductory price (Sonnet 5's ran to 2026-08-31) is invisible
+   otherwise.
 
 The algorithm itself (stakes gate → score → fan-out → verify → downshift) is **model-agnostic** and does
 not change when the roster does — only the tier table and the cost ratio need refreshing.
@@ -106,7 +127,7 @@ Effort moves token spend and latency as much as model choice — right-sizing it
 
 3. SCORE complexity + ambiguity + output type:
    trivial + clear + cheap-to-verify        → Haiku 4.5  (or Sonnet, effort low)
-   everyday + well-specified                → Sonnet 4.6, effort medium   ← default
+   everyday + well-specified                → Sonnet 5, effort medium   ← delegated default
    hard | ambiguous-important | long-horizon → Opus 5, effort high–xhigh
 
 4. BREADTH:
